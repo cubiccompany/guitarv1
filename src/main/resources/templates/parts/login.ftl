@@ -19,7 +19,7 @@
         <div class="form-group row" >
             <label class="col-sm-2 col-form-label">number:</label>
             <div class="col-sm-6">
-                <input type="text" name="number"  placeholder="number" />
+                <input type="text" name="number"  class="form-control" placeholder="number" />
             </div>
         </div>
 
