@@ -1,6 +1,9 @@
 package com.example.domain;
 
+import org.hibernate.validator.constraints.Length;
+
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 
 @Entity
 public class Ad {
@@ -8,7 +11,10 @@ public class Ad {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Integer id;
 
+    @NotBlank(message = "Заполните поле")
+    @Length(max = 2048, message = "Слишком длинное сообщение")
     private String text;
+    @Length(max = 255, message = "Слишком длинное сообщение")
     private String tag;
     private String number; //new
 

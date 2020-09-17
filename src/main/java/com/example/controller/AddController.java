@@ -8,17 +8,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import sun.awt.image.IntegerComponentRaster;
-
+import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Controller
 public class AddController {
@@ -56,33 +59,50 @@ public class AddController {
     @PostMapping("/main")
     public String add(
             @AuthenticationPrincipal User user,
-            @RequestParam String text,
-            @RequestParam String tag, Map<String, Object> model,
+            @Valid Ad ad,
+            BindingResult bindingResult,
+            //@RequestParam String text,
+            //@RequestParam String tag, Map<String, Object> model,
+            Model model,
             @RequestParam String number,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
-        Ad ad = new Ad(text, tag, user, number);
+        ad.setAuthor(user);
 
-        if (file != null && !file.getOriginalFilename().isEmpty()) {
-            File uploadDir = new File(uploadPath);
+       /* if(bindingResult.hasErrors()){
+            Collector<FieldError, ?, Map<String, String>> collector = Collectors.toMap(
+                    fieldError -> fieldError.getField() + "Error",
+                    FieldError::getDefaultMessage
+            );
+            Map<String, String> errosMap = bindingResult.getFieldError()stream.collect(collector);
+            model.mergeAttributes(errosMap);*/
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errorsMap = ControllerUtils.getErrors(bindingResult);
 
-            if (!uploadDir.exists()) {
-                uploadDir.mkdir();
+            model.mergeAttributes(errorsMap);
+            model.addAttribute("ad", ad);
+        }else {
+            if (file != null && !file.getOriginalFilename().isEmpty()) {
+                File uploadDir = new File(uploadPath);
+
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdir();
+                }
+
+                String uuidFile = UUID.randomUUID().toString();
+                String resultFilename = uuidFile + "." + file.getOriginalFilename();
+
+                file.transferTo(new File(uploadPath + "/" + resultFilename));
+
+                ad.setFilename(resultFilename);
             }
 
-            String uuidFile = UUID.randomUUID().toString();
-            String resultFilename = uuidFile + "." + file.getOriginalFilename();
-
-            file.transferTo(new File(uploadPath + "/" + resultFilename));
-
-            ad.setFilename(resultFilename);
+            model.addAttribute("ad", null);
+            adRepo.save(ad);
         }
-
-        adRepo.save(ad);
-
         Iterable<Ad> ads = adRepo.findAll();
 
-        model.put("ads", ads);
+        model.addAttribute("ads", ads);
 
         return "main";
     }
