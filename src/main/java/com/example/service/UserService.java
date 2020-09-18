@@ -9,14 +9,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+
 
 @Service
 public class UserService implements UserDetailsService {
@@ -32,6 +28,7 @@ public class UserService implements UserDetailsService {
     public List<User> findAll(){
         return userRepo.findAll();
     }
+
 
     public void saveUser(User user, String username, Map<String, String> form){
         user.setUsername(username);
